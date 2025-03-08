@@ -1,6 +1,5 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2025 Mohamed Abdullah <110121104039@aalimec.ac.in>
 */
 package main
 

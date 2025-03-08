@@ -1,6 +1,5 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2025 Mohamed Abdullah <110121104039@aalimec.ac.in>
 */
 package cmd
 
@@ -11,7 +10,6 @@ import (
 
 
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bridge",
 	Short: "",
