@@ -55,7 +55,7 @@ func New(cfg config.Config, log *logger.Logger) (*Gateway, error) {
 	// For testing in Docker, you might need to use the IPv4 address of the bridge interface.
 	externalIPv4 := net.ParseIP("192.168.1.100") // Replace with your gateway's IPv4
 	if externalIPv4 == nil || externalIPv4.To4() == nil {
-		log.Warn("Using a placeholder external IPv4 address. Please configure appropriately.")
+		log.Warning("Using a placeholder external IPv4 address. Please configure appropriately.")
 		externalIPv4 = net.IPv4(192, 168, 1, 100)
 	}
 
