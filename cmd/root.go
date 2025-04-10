@@ -1,30 +1,31 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
+var cfgFile string
 
-
+// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bridge",
-	Short: "Bridge helps you to communicate with IpV6 to IpV4",
-	Long: `Bridge is a tool that helps you to communicate with IpV6 to IpV4.`,
-	
+	Short: "A Stateful NAT64 Gateway",
+	Long: `bridge is a Stateful NAT64 gateway that enables communication
+between IPv6-only clients and IPv4-only servers.`,
 }
 
-
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml)")
 }
-
-
