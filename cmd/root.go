@@ -3,22 +3,30 @@ package cmd
 import (
 	"fmt"
 	"os"
-
 	"github.com/spf13/cobra"
 )
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bridge",
 	Short: "A Stateful NAT64 Gateway",
 	Long: `bridge is a Stateful NAT64 gateway that enables communication
 between IPv6-only clients and IPv4-only servers.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		asciiart := `
+██████╗ ██████╗ ██╗██████╗  ██████╗ ███████╗
+██╔══██╗██╔══██╗██║██╔══██╗██╔════╝ ██╔════╝
+██████╔╝██████╔╝██║██║  ██║██║  ███╗█████╗  
+██╔══██╗██╔══██╗██║██║  ██║██║   ██║██╔══╝  
+██████╔╝██║  ██║██║██████╔╝╚██████╔╝███████╗
+╚═════╝ ╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚══════╝
+`
+		fmt.Println(asciiart)
+		fmt.Println("Welcome to the bridge CLI!, please use the --help flag to see available commands.")
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

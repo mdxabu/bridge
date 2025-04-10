@@ -1,4 +1,3 @@
-// bridge/cmd/start.go
 package cmd
 
 import (
@@ -10,7 +9,7 @@ import (
 
 	"github.com/mdxabu/bridge/internal/config"
 	"github.com/mdxabu/bridge/internal/core/gateway"
-	"github.com/mdxabu/bridge/internal/logger" // Corrected import path
+	"github.com/mdxabu/bridge/internal/logger" 
 )
 
 var startCmd = &cobra.Command{
@@ -21,14 +20,13 @@ setting up network listeners, and beginning the translation process.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Starting the NAT64 gateway...")
 
-		// Initialize configuration
 		if cfgFile != "" {
 			viper.SetConfigFile(cfgFile)
 		} else {
 			viper.SetConfigName("config")
 			viper.SetConfigType("yaml")
-			viper.AddConfigPath(".")         // Search current directory
-			viper.AddConfigPath("./configs") // Search configs directory
+			viper.AddConfigPath(".")         
+			viper.AddConfigPath("./configs") 
 		}
 
 		if err := viper.ReadInConfig(); err != nil {
@@ -47,22 +45,26 @@ setting up network listeners, and beginning the translation process.`,
 			return
 		}
 
-		// Initialize logger
-		log := logger.New(cfg.LogLevel)
-		log.Info("Configuration loaded successfully")
-		log.Debug("Loaded configuration", "config", cfg)
+		log := logger.New(logger.InfoLevel)
+		if cfg.LogLevel == "debug" {
+			logger.SetDefaultLogLevel(logger.DebugLevel)
+		} else if cfg.LogLevel == "error" {
+			logger.SetDefaultLogLevel(logger.ErrorLevel)
+		}
 
-		// Initialize and start the NAT64 gateway
+		log.Info("Configuration loaded successfully")
+		log.Debug("Loaded configuration: %+v", cfg)
+
 		nat64Gateway, err := gateway.New(cfg, log)
 		if err != nil {
-			log.Error("Failed to initialize gateway", "error", err)
+			log.Error("Failed to initialize gateway: %v", err)
 			return
 		}
 
 		log.Info("NAT64 gateway initialized. Starting...")
 		if err := nat64Gateway.Start(); err != nil {
-			log.Error("Failed to start gateway", "error", err)
-			os.Exit(1) // Terminate the application
+			log.Error("Failed to start gateway: %v", err)
+			os.Exit(1) 
 		}
 
 		fmt.Println("NAT64 gateway started. Press Ctrl+C to stop.")

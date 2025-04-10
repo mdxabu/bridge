@@ -1,4 +1,4 @@
 interface_name: eth0 # Replace with your network interface
 nat64_prefix: "64:ff9b::/96"
-log_level: debug # Can be debug, info, warn, error
+log_level: info # Can be debug, info, warn, error
 state_timeout: 300 # In seconds
