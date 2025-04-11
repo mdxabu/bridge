@@ -14,18 +14,12 @@ To run Bridge, follow these steps:
    ```
 3. Build the project
    ```
-   go build -o bridge
+   > go build -o bridge
+   > go install .
+
    ```
-4. Configure the application by creating a `config.yaml` file in the project root or in the `configs` directory:
-   ```yaml
-   interfaceName: "eth0"  # Network interface to use
-   nat64Prefix: "64:ff9b::/96"  # NAT64 prefix
-   stateTimeout: 300  # Connection state timeout in seconds
-   logLevel: "info"  # Logging level (debug, info, error, fatal)
+
    ```
-5. Run the application with administrator/root privileges
-   ```
-   sudo ./bridge start
-   ```
+
 
 The application requires elevated privileges to access network interfaces for packet capture and transmission.

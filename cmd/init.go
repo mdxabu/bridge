@@ -21,7 +21,6 @@ var initCmd = &cobra.Command{
 	Long: `The init command creates a bridgeconfig.yaml file to store
 information about the Docker containers used for IPv4 and IPv6 translation.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Create a default configuration template instead of asking for input
 		config := BridgeConfig{
 			IPv4ContainerID: "ipv4-container-id",
 			IPv6ContainerID: "ipv6-container-id",
