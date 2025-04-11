@@ -1,4 +1,3 @@
-interface_name: eth0 # Replace with your network interface
-nat64_prefix: "64:ff9b::/96"
+nat64_prefix: "64:ff9b::/96" # NAT64 prefix for IPv4-to-IPv6 translation
 log_level: info # Can be debug, info, warn, error
-state_timeout: 300 # In seconds
+state_timeout: 300 # Timeout for mapping cleanup in seconds

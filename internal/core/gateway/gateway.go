@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/mdxabu/bridge/internal/config"
-	"github.com/mdxabu/bridge/internal/core"
 	"github.com/mdxabu/bridge/internal/core/state"
 	"github.com/mdxabu/bridge/internal/logger"
 	"github.com/mdxabu/bridge/internal/network"
@@ -103,15 +102,17 @@ func (g *Gateway) handlePacket(packet gopacket.Packet) {
 	switch {
 	case ipv6Layer != nil && ipv4Layer == nil:
 		g.log.Debug("Received IPv6 packet")
-		g.processIPv6Packet(packet)
+		// g.processIPv6Packet(packet)
 	case ipv4Layer != nil && ipv6Layer == nil:
 		g.log.Debug("Received IPv4 packet")
-		g.processIPv4Packet(packet)
+		// g.processIPv4Packet(packet)
 	default:
 		g.log.Debug("Received non-IPv4/IPv6 packet or both present")
 	}
 }
 
+/* 
+? The IPv6 processing function is commented out for now, as it requires further implementation.:
 func (g *Gateway) processIPv6Packet(packet gopacket.Packet) {
 	ipv6 := packet.Layer(layers.LayerTypeIPv6).(*layers.IPv6)
 	transportLayer := packet.TransportLayer()
@@ -134,7 +135,7 @@ func (g *Gateway) processIPv6Packet(packet gopacket.Packet) {
 		} else {
 			g.log.Warn("Destination IPv6 does not contain a valid embedded IPv4 address: %s", ipv6.DstIP)
 		}
-	} else {
+	 } else {
 		entry := g.stateTable.LookupIPv6ToIPv4(ipv6.SrcIP, srcPort, ipv6.DstIP, dstPort)
 		if entry != nil {
 			g.log.Debug("State entry found for outgoing IPv6: %s:%d -> %s:%d (via %s:%d)", ipv6.SrcIP, srcPort, ipv6.DstIP, dstPort, entry.IPv4SrcIP, entry.IPv4SrcPort)
@@ -151,7 +152,10 @@ func (g *Gateway) processIPv6Packet(packet gopacket.Packet) {
 		}
 	}
 }
+	*/
 
+/*
+? The IPv4 processing function is commented out for now, as it requires further implementation.:
 func (g *Gateway) processIPv4Packet(packet gopacket.Packet) {
 	ipv4 := packet.Layer(layers.LayerTypeIPv4).(*layers.IPv4)
 	transportLayer := packet.TransportLayer()
@@ -181,7 +185,7 @@ func (g *Gateway) processIPv4Packet(packet gopacket.Packet) {
 
 	g.log.Debug("IPv4 packet to non-gateway destination: %s -> %s", ipv4.SrcIP, ipv4.DstIP)
 }
-
+*/
 func (g *Gateway) allocatePort() uint16 {
 	g.portAllocatorMutex.Lock()
 	defer g.portAllocatorMutex.Unlock()
