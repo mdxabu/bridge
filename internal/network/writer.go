@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 
-	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	"github.com/mdxabu/bridge/internal/logger"
 )
@@ -29,10 +28,8 @@ func NewWriter(ifaceName string, logger *logger.Logger) (*Writer, error) {
 	}, nil
 }
 
-func (w *Writer) WritePacket(packet gopacket.Packet) error {
-	rawBytes := packet.Data()
-
-	err := w.handle.WritePacketData(rawBytes)
+func (w *Writer) WritePacket(data []byte) error {
+	err := w.handle.WritePacketData(data)
 	if err != nil {
 		return fmt.Errorf("error sending packet on %s: %w", w.interfaceName, err)
 	}

@@ -1,3 +1,0 @@
-ipv4_container_id: ipv4-translator
-ipv6_container_id: ipv6-translator
-description: Default bridge configuration for Docker containers
