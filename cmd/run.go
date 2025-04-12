@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -13,14 +10,16 @@ import (
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run the translation process",
-	Long: `Run the translation process to convert IPv4 to IPv6 and vice versa.`,
+	Long:  `Run the translation process to convert IPv6 to IPv4 and forward to the IPv4 container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg,err := config.ParseConfig()
+		
+		cfg, err := config.ParseConfig()
 		if err != nil {
-			logger.Error("Failed to parse config file: %v", err)
+			logger.Fatal("Failed to parse config file: %v", err)
 		}
 		logger.Info("Starting the translation process...")
-        gateway.start(cfg)
+		gateway.Start(cfg)
+	
 	},
 }
 
