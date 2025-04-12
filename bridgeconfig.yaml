@@ -1,0 +1,17 @@
+network:
+    ipv6_container:
+        container_id: ipv6-client-container-id
+        enabled_ipv6: true
+        enabled_ipv4: false
+    ipv4_container:
+        container_id: ipv4-server-container-id
+        enabled_ipv6: false
+        enabled_ipv4: true
+    nat64_prefix: 64:ff9b::/96
+    ipv4_range: 192.0.2.0/24
+logging:
+    level: info
+metrics:
+    enabled: true
+    listen: :9100
+interface: eth0
