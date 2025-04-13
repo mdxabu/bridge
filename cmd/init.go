@@ -13,12 +13,13 @@ import (
 
 type Config struct {
 	Interface string `yaml:"interface"`
-	SourceIP  string `yaml:"source_ip"`
+	IPv6      string `yaml:"ipv6"`
+	// IPv4      string `yaml:"ipv4"`
 }
 
 var bridgeConfig Config
 
-func getIPFromInterface(interfaceName string) (string, bool) {
+func getIPFromInterface(interfaceName string, wantIPv6 bool) (string, bool) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		logger.Error("Failed to get network interfaces: %v", err)
@@ -42,18 +43,14 @@ func getIPFromInterface(interfaceName string) (string, bool) {
 			}
 			ip := ipnet.IP
 
-			if ip.To16() != nil && ip.To4() == nil && !ip.IsLinkLocalUnicast() {
-				return ip.String(), true
-			}
-		}
-
-		if interfaceName != "" {
-			for _, addr := range addrs {
-				ipnet, ok := addr.(*net.IPNet)
-				if !ok {
-					continue
+			if wantIPv6 {
+				if ip.To16() != nil && ip.To4() == nil && !ip.IsLinkLocalUnicast() {
+					return ip.String(), true
 				}
-				return ipnet.IP.String(), true
+			} else {
+				if ip.To4() != nil {
+					return ip.String(), true
+				}
 			}
 		}
 	}
@@ -91,13 +88,15 @@ var initCmd = &cobra.Command{
 
 		bridgeConfig.Interface = interfaceName
 
-		if ip, found := getIPFromInterface(interfaceName); found {
-			bridgeConfig.SourceIP = ip
-			logger.Info("Using IP address: %s from interface: %s", ip, interfaceName)
+		if ip, found := getIPFromInterface(interfaceName, true); found {
+			bridgeConfig.IPv6 = ip
+			logger.Info("Using IPv6 address: %s from interface: %s", ip, interfaceName)
 		} else {
-			logger.Warn("No suitable IP address found for interface: %s", interfaceName)
-			bridgeConfig.SourceIP = ""
+			logger.Warn("No IPv6 address found for interface: %s", interfaceName)
+			bridgeConfig.IPv6 = ""
 		}
+
+		
 
 		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {
@@ -115,4 +114,5 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().String("interface", "", "Network interface to get IP addresses from (defaults to WiFi interface)")
 }
