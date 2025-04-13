@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"net"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -9,73 +11,95 @@ import (
 	"github.com/mdxabu/bridge/internal/logger"
 )
 
-type ContainerConfig struct {
-	ContainerID string `yaml:"container_id"`
-	EnabledIPv6 bool   `yaml:"enabled_ipv6"`
-	EnabledIPv4 bool   `yaml:"enabled_ipv4"`
+type Config struct {
+	Interface string `yaml:"interface"`
+	SourceIP  string `yaml:"source_ip"`
 }
 
-type NetworkConfig struct {
-	IPv6Container ContainerConfig `yaml:"ipv6_container"`
-	IPv4Container ContainerConfig `yaml:"ipv4_container"`
-	NAT64Prefix   string          `yaml:"nat64_prefix"`
-	IPv4Range     string          `yaml:"ipv4_range"`
-}
+var bridgeConfig Config
 
-type LoggingConfig struct {
-	Level string `yaml:"level"`
-}
+func getIPFromInterface(interfaceName string) (string, bool) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		logger.Error("Failed to get network interfaces: %v", err)
+		return "", false
+	}
 
-type MetricsConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
-}
+	for _, iface := range ifaces {
+		if interfaceName != "" && iface.Name != interfaceName {
+			continue
+		}
 
-type BridgeConfig struct {
-	Network   NetworkConfig `yaml:"network"`
-	Logging   LoggingConfig `yaml:"logging"`
-	Metrics   MetricsConfig `yaml:"metrics"`
-	Interface string        `yaml:"interface"`
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			ipnet, ok := addr.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			ip := ipnet.IP
+
+			if ip.To16() != nil && ip.To4() == nil && !ip.IsLinkLocalUnicast() {
+				return ip.String(), true
+			}
+		}
+
+		if interfaceName != "" {
+			for _, addr := range addrs {
+				ipnet, ok := addr.(*net.IPNet)
+				if !ok {
+					continue
+				}
+				return ipnet.IP.String(), true
+			}
+		}
+	}
+	return "", false
 }
 
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize the bridge configuration",
 	Long: `The init command creates a bridgeconfig.yaml file to store
-information about the Docker containers used for IPv4 and IPv6 translation.`,
+			information for IPv4 and IPv6 translation.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config := BridgeConfig{
-			Network: NetworkConfig{
-				IPv6Container: ContainerConfig{
-					ContainerID: "ipv6-client-container-id",
-					EnabledIPv6: true,
-					EnabledIPv4: false,
-				},
-				IPv4Container: ContainerConfig{
-					ContainerID: "ipv4-server-container-id",
-					EnabledIPv6: false,
-					EnabledIPv4: true,
-				},
-				NAT64Prefix: "64:ff9b::/96",
-				IPv4Range:   "192.0.2.0/24",
-			},
-			Logging: LoggingConfig{
-				Level: "info",
-			},
-			Metrics: MetricsConfig{
-				Enabled: true,
-				Listen:  ":9100",
-			},
-			Interface: "eth0",
-		}
-
-		// Check if the file already exists
 		if _, err := os.Stat("bridgeconfig.yaml"); err == nil {
 			logger.Warn("Configuration file 'bridgeconfig.yaml' already exists!")
 			return
 		}
 
-		data, err := yaml.Marshal(&config)
+		interfaceName, _ := cmd.Flags().GetString("interface")
+
+		if interfaceName == "" {
+			ifaces, err := net.Interfaces()
+			if err != nil {
+				logger.Fatal("Failed to get network interfaces: %v", err)
+			}
+
+			for _, iface := range ifaces {
+				if strings.Contains(strings.ToLower(iface.Name), "wi-fi") ||
+					strings.Contains(strings.ToLower(iface.Name), "wireless") {
+					interfaceName = iface.Name
+					logger.Info("Found WiFi interface: %s", interfaceName)
+					break
+				}
+			}
+		}
+
+		bridgeConfig.Interface = interfaceName
+
+		if ip, found := getIPFromInterface(interfaceName); found {
+			bridgeConfig.SourceIP = ip
+			logger.Info("Using IP address: %s from interface: %s", ip, interfaceName)
+		} else {
+			logger.Warn("No suitable IP address found for interface: %s", interfaceName)
+			bridgeConfig.SourceIP = ""
+		}
+
+		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {
 			logger.Fatal("Failed to serialize configuration: %v", err)
 		}
