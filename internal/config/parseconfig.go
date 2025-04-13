@@ -105,3 +105,4 @@ func (c *Config) GetMetricsListen() string {
 func (c *Config) GetInterface() string {
 	return c.Interface
 }
+
