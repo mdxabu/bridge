@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
 type LogLevel int
@@ -41,6 +43,21 @@ type Logger struct {
 	fatalLogger *log.Logger
 	level       LogLevel
 }
+
+type PingRow struct {
+	Source      string
+	Destination string
+	Sent        int
+	Received    int
+	Loss        float64
+	AvgRTT      time.Duration
+	Result      string
+}
+
+var pingResults []PingRow
+
+
+
 
 func New(level LogLevel) *Logger {
 	return NewWithWriter(os.Stdout, level)
@@ -149,4 +166,39 @@ func Error(format string, v ...interface{}) {
 
 func Fatal(format string, v ...interface{}) {
 	defaultLogger.Fatal(format, v...)
+}
+
+func ClearPingResults() {
+	pingResults = []PingRow{}
+}
+
+func PingTable(source, dest string, sent, recv int, loss float64, avg time.Duration) {
+	result := "Success"
+	if recv == 0 {
+		result = "Failed"
+	}
+	pingResults = append(pingResults, PingRow{
+		Source:      source,
+		Destination: dest,
+		Sent:        sent,
+		Received:    recv,
+		Loss:        loss,
+		AvgRTT:      avg,
+		Result:      result,
+	})
+}
+
+func DisplayPingTable() {
+	fmt.Printf("\n%-18s %-18s %-12s %-14s %-12s %-12s %-10s\n",
+		"Source", "Destination", "Sent", "Received", "Loss(%)", "Avg RTT", "Result")
+	fmt.Println(strings.Repeat("-", 100))
+	for _, row := range pingResults {
+		color := colorGreen
+		if row.Result == "Failed" {
+			color = colorRed
+		}
+		fmt.Printf("%-18s %-18s %-12d %-14d %-12.1f %-12v %s%-10s%s\n",
+			row.Source, row.Destination, row.Sent, row.Received, row.Loss, row.AvgRTT,
+			color, row.Result, colorReset)
+	}
 }

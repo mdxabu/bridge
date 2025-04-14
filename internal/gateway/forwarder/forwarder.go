@@ -1,49 +1,83 @@
 package forwarder
 
 import (
-	"bufio"
-	"os"
-	"strings"
+	"net"
+	"time"
 
+	"github.com/go-ping/ping"
 	"github.com/mdxabu/bridge/internal/config"
+	"github.com/mdxabu/bridge/internal/gateway/translator"
 	"github.com/mdxabu/bridge/internal/logger"
 )
 
-
-func ReadIPv4Addresses() ([]string, error) {
-	cfg, err := config.ParseConfig()
+func Start() {
+	nextIP, err := config.GetDestIpAddress()
 	if err != nil {
-		return nil, err
+		logger.Error("Failed to get destination IP addresses: %v", err)
+		return
 	}
 
-	filePath, err := cfg.GetDestIPPath()
-	if err != nil {
-		return nil, err
-	}
+	logger.ClearPingResults()
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var ipAddresses []string
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		if line == "" || strings.HasPrefix(line, "//") || strings.HasPrefix(line, "#") {
-			continue
+	for {
+		ip, ok := nextIP()
+		if !ok {
+			break
 		}
-
-		ipAddresses = append(ipAddresses, line)
+		pingDestination(ip)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, err
+	logger.DisplayPingTable()
+}
+
+func pingDestination(ip string) {
+	sourceIP := getSourceIP()
+
+	pinger, err := ping.NewPinger(ip)
+	if err != nil {
+		logger.PingTable(sourceIP, ip, 0, 0, 100.0, 0)
+		logger.Error("Failed to create pinger for %s: %v", ip, err)
+		return
 	}
 
-	logger.Info("Read %d IPv4 addresses from %s", len(ipAddresses), filePath)
-	return ipAddresses, nil
+	pinger.Count = 2
+	pinger.Timeout = time.Second * 5
+	pinger.SetPrivileged(true)
+
+	pinger.OnFinish = func(stats *ping.Statistics) {
+		logger.PingTable(sourceIP, ip, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss, stats.AvgRtt)
+	}
+
+	if err := pinger.Run(); err != nil {
+		logger.PingTable(sourceIP, ip, 2, 0, 100.0, 0)
+		logger.Error("Ping failed for %s: %v", ip, err)
+	}
+}
+
+func getSourceIP() string {
+	conf, err := config.ParseConfig()
+	if err != nil {
+		logger.Error("Failed to parse configuration: %v", err)
+		return "unknown"
+	}
+
+	nat64, err := conf.GetNAT64IP()
+	if err != nil {
+		logger.Error("Failed to get NAT64 IP: %v", err)
+		return "unknown"
+	}
+
+	ip := net.ParseIP(nat64)
+	if ip == nil {
+		logger.Error("Invalid NAT64 IP: %s", nat64)
+		return "unknown"
+	}
+
+	ipv4, err := translator.GetIPV4fromNAT64(ip.String())
+	if err != nil {
+		logger.Error("NAT64 to IPv4 conversion failed: %v", err)
+		return "unknown"
+	}
+
+	return ipv4
 }

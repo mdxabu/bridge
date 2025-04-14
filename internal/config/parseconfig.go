@@ -1,8 +1,10 @@
 package config
 
 import (
+	"bufio"
 	"errors"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -67,7 +69,49 @@ func (c *BridgeConfig) GetNAT64Prefix() (string,error) {
 
 func (c *BridgeConfig) GetDestIPPath() (string,error) {
 	if c.DestIPpath == "" {
-		return "", errors.New("Destination IP path is not set")
+		return "", errors.New("destination IP path is not set")
 	}
 	return c.DestIPpath, nil
+}
+
+
+func GetDestIpAddress() (func() (string, bool), error) {
+	config, err := ParseConfig()
+	if err != nil {
+		return nil, err
+	}
+	
+	filepath, err := config.GetDestIPPath()
+	if err != nil {
+		return nil, err
+	}
+	
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	var ips []string
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			ips = append(ips, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	index := 0
+	return func() (string, bool) {
+		if index >= len(ips) {
+			return "", false
+		}
+		ip := ips[index]
+		index++
+		return ip, true
+	}, nil
 }
