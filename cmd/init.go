@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Interface string `yaml:"interface"`
 	NAT64IP   string `yaml:"nat64_ip"`
+	DestIPpath    string `yaml:"dest_ip_path"`
 	// IPv4      string `yaml:"ipv4"`
 }
 
@@ -97,6 +98,8 @@ var initCmd = &cobra.Command{
 			logger.Warn("No IP address found for interface: %s", interfaceName)
 			bridgeConfig.NAT64IP = ""
 		}
+
+		bridgeConfig.DestIPpath = "dest_ip.txt"
 
 		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {

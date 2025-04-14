@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/mdxabu/bridge/internal/config"
+	"github.com/mdxabu/bridge/internal/gateway/forwarder"
 	"github.com/mdxabu/bridge/internal/gateway/translator"
 	"github.com/mdxabu/bridge/internal/logger"
 )
@@ -27,7 +28,6 @@ func Start(ip string) {
 		return
 	}
 
-
 	logger.Info("is NAT64Address: %v", translator.IsNAT64Address(ip))
 
 	logger.Success("Successfully translated IPv6 to IPv4")
@@ -38,4 +38,13 @@ func Start(ip string) {
 		return
 	}
 	logger.Info("IPv4 Address: %s", ipv4addr)
+
+	// Call ReadIPv4Addresses with correct capitalization
+	ipv4Addresses, err := forwarder.ReadIPv4Addresses()
+	if err != nil {
+		logger.Error("Failed to read IPv4 addresses: %v", err)
+		return
+	}
+
+	logger.Info("Found %d IPv4 addresses", len(ipv4Addresses))
 }

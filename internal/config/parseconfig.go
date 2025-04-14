@@ -14,6 +14,7 @@ var Default_NAT64_prefix = "64:ff9b::"
 type BridgeConfig struct {
 	Interface string `yaml:"interface"`
 	NAT64IP   string `yaml:"nat64_ip"`
+	DestIPpath string `yaml:"dest_ip_path"`
 }
 
 func ParseConfig() (*BridgeConfig, error) {
@@ -62,4 +63,11 @@ func (c *BridgeConfig) GetNAT64Prefix() (string,error) {
 		return "", errors.New("NAT64 IP is not set")
 	}
 	return Default_NAT64_prefix, nil
+}
+
+func (c *BridgeConfig) GetDestIPPath() (string,error) {
+	if c.DestIPpath == "" {
+		return "", errors.New("Destination IP path is not set")
+	}
+	return c.DestIPpath, nil
 }
