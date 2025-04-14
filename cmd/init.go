@@ -5,15 +5,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mdxabu/bridge/internal/gateway/translator"
+	"github.com/mdxabu/bridge/internal/logger"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-
-	"github.com/mdxabu/bridge/internal/logger"
 )
 
 type Config struct {
 	Interface string `yaml:"interface"`
-	IPv6      string `yaml:"ipv6"`
+	NAT64IP   string `yaml:"nat64_ip"`
 	// IPv4      string `yaml:"ipv4"`
 }
 
@@ -88,15 +88,24 @@ var initCmd = &cobra.Command{
 
 		bridgeConfig.Interface = interfaceName
 
-		if ip, found := getIPFromInterface(interfaceName, true); found {
-			bridgeConfig.IPv6 = ip
-			logger.Info("Using IPv6 address: %s from interface: %s", ip, interfaceName)
-		} else {
-			logger.Warn("No IPv6 address found for interface: %s", interfaceName)
-			bridgeConfig.IPv6 = ""
-		}
+		// Get IPv6 address for NAT64
+		// if ip, found := getIPFromInterface(interfaceName, true); found {
+		// 	bridgeConfig.NAT64IP = ip
+		// 	logger.Info("Using NAT64 IP (IPv6): %s from interface: %s", ip, interfaceName)
+		// } else {
+		// 	logger.Warn("No IPv6 address found for NAT64 on interface: %s", interfaceName)
+		// 	bridgeConfig.NAT64IP = ""
+		// }
 
-		
+		// Get IPv4 address
+		if ip, found := getIPFromInterface(interfaceName, false); found {
+			nat64_ip := translator.GetNAT64Prefix(ip)
+			bridgeConfig.NAT64IP = nat64_ip
+			logger.Info("Configured the NAT64 Address on your interface IP Address")
+		} else {
+			logger.Warn("No IP address found for interface: %s", interfaceName)
+			bridgeConfig.NAT64IP = ""
+		}
 
 		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {
