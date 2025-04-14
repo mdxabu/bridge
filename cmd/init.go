@@ -15,6 +15,7 @@ type Config struct {
 	Interface string `yaml:"interface"`
 	NAT64IP   string `yaml:"nat64_ip"`
 	DestIPpath    string `yaml:"dest_ip_path"`
+	DestDomainPath string `yaml:"dest_domain_path"`
 	// IPv4      string `yaml:"ipv4"`
 }
 
@@ -100,6 +101,7 @@ var initCmd = &cobra.Command{
 		}
 
 		bridgeConfig.DestIPpath = "dest_ip.txt"
+		bridgeConfig.DestDomainPath = "dest_domain.txt"
 
 		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {

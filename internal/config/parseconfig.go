@@ -14,9 +14,10 @@ const DefaultConfigPath = "bridgeconfig.yaml"
 var Default_NAT64_prefix = "64:ff9b::"
 
 type BridgeConfig struct {
-	Interface string `yaml:"interface"`
-	NAT64IP   string `yaml:"nat64_ip"`
-	DestIPpath string `yaml:"dest_ip_path"`
+	Interface      string `yaml:"interface"`
+	NAT64IP        string `yaml:"nat64_ip"`
+	DestIPpath     string `yaml:"dest_ip_path"`
+	DestDomainPath string `yaml:"dest_domain_path"`
 }
 
 func ParseConfig() (*BridgeConfig, error) {
@@ -52,7 +53,7 @@ func (c *BridgeConfig) GetInterface() string {
 	return c.Interface
 }
 
-func (c *BridgeConfig) GetNAT64IP() (string,error) {
+func (c *BridgeConfig) GetNAT64IP() (string, error) {
 	if c.NAT64IP == "" {
 		return "", errors.New("NAT64 IP is not set")
 	}
@@ -60,32 +61,38 @@ func (c *BridgeConfig) GetNAT64IP() (string,error) {
 	return c.NAT64IP, nil
 }
 
-func (c *BridgeConfig) GetNAT64Prefix() (string,error) {
+func (c *BridgeConfig) GetNAT64Prefix() (string, error) {
 	if c.NAT64IP == "" {
 		return "", errors.New("NAT64 IP is not set")
 	}
 	return Default_NAT64_prefix, nil
 }
 
-func (c *BridgeConfig) GetDestIPPath() (string,error) {
+func (c *BridgeConfig) GetDestIPPath() (string, error) {
 	if c.DestIPpath == "" {
 		return "", errors.New("destination IP path is not set")
 	}
 	return c.DestIPpath, nil
 }
 
+func (c *BridgeConfig) GetDestDomainPath() (string, error) {
+	if c.DestDomainPath == "" {
+		return "", errors.New("destination domain path is not set")
+	}
+	return c.DestDomainPath, nil
+}
 
 func GetDestIpAddress() (func() (string, bool), error) {
 	config, err := ParseConfig()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	filepath, err := config.GetDestIPPath()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -113,5 +120,49 @@ func GetDestIpAddress() (func() (string, bool), error) {
 		ip := ips[index]
 		index++
 		return ip, true
+	}, nil
+}
+
+func GetDestDomain() (func() (string, bool), error) {
+	config, err := ParseConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	filepath, err := config.GetDestDomainPath()
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	var domains []string
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			domains = append(domains, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		file.Close()
+		return nil, err
+	}
+
+	index := 0
+	return func() (string, bool) {
+		if index >= len(domains) {
+			file.Close()
+			return "", false
+		}
+
+		domain := domains[index]
+		index++
+		return domain, true
 	}, nil
 }
