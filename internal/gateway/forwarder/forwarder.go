@@ -50,7 +50,7 @@ func pingDestination(ip string) {
 		return
 	}
 
-	pinger.Count = 2
+	pinger.Count = 5
 	pinger.Timeout = time.Second * 5
 	pinger.SetPrivileged(true)
 
