@@ -1,0 +1,71 @@
+name: Release Bridge CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goarch: arm64
+            goos: windows
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          BUILD_DATE: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        run: |
+          EXTENSION=""
+          if [ "$GOOS" = "windows" ]; then
+            EXTENSION=".exe"
+          fi
+          go build -ldflags "-X github.com/mdxabu/bridge/cmd.version=${VERSION:1} -X github.com/mdxabu/bridge/cmd.commit=${COMMIT} -X github.com/mdxabu/bridge/cmd.buildDate=${BUILD_DATE}" -o bridge-$GOOS-$GOARCH$EXTENSION
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bridge-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bridge-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bridge-*/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
