@@ -28,7 +28,6 @@ func Start(ip string) {
 		return
 	}
 
-
 	logger.Info("is NAT64Address: %v", translator.IsNAT64Address(ip))
 
 	logger.Success("Successfully translated IPv6 to IPv4")
@@ -44,7 +43,5 @@ func Start(ip string) {
 
 	forwarder.Start()
 
-	
-
-
+	logger.Info("Gateway operations completed")
 }

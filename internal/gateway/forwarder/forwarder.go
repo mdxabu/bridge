@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-ping/ping"
 	"github.com/mdxabu/bridge/internal/config"
-	"github.com/mdxabu/bridge/internal/gateway/translator"
 	"github.com/mdxabu/bridge/internal/logger"
 )
 
@@ -19,12 +18,23 @@ func Start() {
 
 	logger.ClearPingResults()
 
+	logger.PrintTableHeader()
+
+	ipCount := 0
+
 	for {
 		ip, ok := nextIP()
 		if !ok {
 			break
 		}
 		pingDestination(ip)
+		ipCount++
+	}
+
+	if ipCount > 0 {
+		logger.Info("Completed pinging %d destinations", ipCount)
+	} else {
+		logger.Warn("No destinations were pinged")
 	}
 
 	logger.DisplayPingTable()
@@ -73,11 +83,12 @@ func getSourceIP() string {
 		return "unknown"
 	}
 
-	ipv4, err := translator.GetIPV4fromNAT64(ip.String())
-	if err != nil {
-		logger.Error("NAT64 to IPv4 conversion failed: %v", err)
-		return "unknown"
-	}
+	// ipv4, err := translator.GetIPV4fromNAT64(ip.String())
+	// if err != nil {
+	// 	logger.Error("NAT64 to IPv4 conversion failed: %v", err)
+	// 	return "unknown"
+	// }
 
-	return ipv4
+
+	return nat64
 }
