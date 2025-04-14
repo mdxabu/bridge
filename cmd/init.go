@@ -88,16 +88,7 @@ var initCmd = &cobra.Command{
 
 		bridgeConfig.Interface = interfaceName
 
-		// Get IPv6 address for NAT64
-		// if ip, found := getIPFromInterface(interfaceName, true); found {
-		// 	bridgeConfig.NAT64IP = ip
-		// 	logger.Info("Using NAT64 IP (IPv6): %s from interface: %s", ip, interfaceName)
-		// } else {
-		// 	logger.Warn("No IPv6 address found for NAT64 on interface: %s", interfaceName)
-		// 	bridgeConfig.NAT64IP = ""
-		// }
-
-		// Get IPv4 address
+	
 		if ip, found := getIPFromInterface(interfaceName, false); found {
 			nat64_ip := translator.GetNAT64Prefix(ip)
 			bridgeConfig.NAT64IP = nat64_ip
@@ -117,7 +108,7 @@ var initCmd = &cobra.Command{
 			logger.Fatal("Failed to write configuration file: %v", err)
 		}
 
-		logger.Info("Default bridgeconfig.yaml template created successfully!")
+		logger.Completed("Default bridgeconfig.yaml template created successfully!")
 	},
 }
 

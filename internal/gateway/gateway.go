@@ -1,7 +1,6 @@
 package gateway
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/mdxabu/bridge/internal/config"
@@ -28,8 +27,15 @@ func Start(ip string) {
 		return
 	}
 
-	fmt.Println("IPv6 Address: ", ipv6Addr)
-	fmt.Println("is NAT64 Address: ", translator.IsNAT64Address(ipv6Addr.String()))
 
-	logger.Info("Successfully translated IPv6 to IPv4")
+	logger.Info("is NAT64Address: %v", translator.IsNAT64Address(ip))
+
+	logger.Success("Successfully translated IPv6 to IPv4")
+
+	ipv4addr, err := translator.GetIPV4fromNAT64(ipv6Addr.String())
+	if err != nil {
+		logger.Error("Failed to get IPv4 from NAT64: %v", err)
+		return
+	}
+	logger.Info("IPv4 Address: %s", ipv4addr)
 }

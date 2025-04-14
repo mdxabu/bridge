@@ -12,6 +12,9 @@ type LogLevel int
 const (
 	DebugLevel LogLevel = iota
 	InfoLevel
+	SuccessLevel
+	CompletedLevel
+	WarnLevel
 	ErrorLevel
 	FatalLevel
 )
@@ -32,6 +35,8 @@ type Logger struct {
 	debugLogger *log.Logger
 	infoLogger  *log.Logger
 	warnLogger  *log.Logger
+	successLogger *log.Logger
+	completedLogger *log.Logger
 	errorLogger *log.Logger
 	fatalLogger *log.Logger
 	level       LogLevel
@@ -45,6 +50,8 @@ func NewWithWriter(writer io.Writer, level LogLevel) *Logger {
 	return &Logger{
 		debugLogger: log.New(writer, "", 0),
 		infoLogger:  log.New(writer, "", 0),
+		successLogger: log.New(writer, "", 0),
+		completedLogger: log.New(writer, "", 0),
 		warnLogger:  log.New(writer, "", 0),
 		errorLogger: log.New(writer, "", 0),
 		fatalLogger: log.New(writer, "", 0),
@@ -62,7 +69,21 @@ func (l *Logger) Debug(format string, v ...interface{}) {
 func (l *Logger) Info(format string, v ...interface{}) {
 	if l.level <= InfoLevel {
 		now := log.Ldate | log.Ltime
-		l.infoLogger.Output(2, fmt.Sprintf("%s%s%s %s[INFO]%s %s", colorYellow, log.New(os.Stdout, "", now).Prefix(), colorReset, colorGreen, colorReset, fmt.Sprintf(format, v...)))
+		l.infoLogger.Output(2, fmt.Sprintf("%s%s%s %s[INFO]%s %s", colorBlue, log.New(os.Stdout, "", now).Prefix(), colorReset, colorBlue, colorReset, fmt.Sprintf(format, v...)))
+	}
+}
+
+func (l *Logger) Success(format string, v ...interface{}) {
+	if l.level <= InfoLevel {
+		now := log.Ldate | log.Ltime
+		l.infoLogger.Output(2, fmt.Sprintf("%s%s%s %s[SUCCESS]%s %s", colorGreen, log.New(os.Stdout, "", now).Prefix(), colorReset, colorGreen, colorReset, fmt.Sprintf(format, v...)))
+	}
+}
+
+func (l *Logger) Completed(format string, v ...interface{}) {
+	if l.level <= InfoLevel {
+		now := log.Ldate | log.Ltime
+		l.infoLogger.Output(2, fmt.Sprintf("%s%s%s %s[COMPLETED]%s %s", colorGreen, log.New(os.Stdout, "", now).Prefix(), colorReset, colorGreen, colorReset, fmt.Sprintf(format, v...)))
 	}
 }
 
@@ -76,7 +97,7 @@ func (l *Logger) Warn(format string, v ...interface{}) {
 func (l *Logger) Error(format string, v ...interface{}) {
 	if l.level <= ErrorLevel {
 		now := log.Ldate | log.Ltime
-		l.errorLogger.Output(2, fmt.Sprintf("%s%s%s %s[ERROR]%s %s", colorYellow, log.New(os.Stdout, "", now).Prefix(), colorReset, colorRed, colorReset, fmt.Sprintf(format, v...)))
+		l.errorLogger.Output(2, fmt.Sprintf("%s%s%s %s[ERROR]%s %s", colorRed, log.New(os.Stdout, "", now).Prefix(), colorReset, colorRed, colorReset, fmt.Sprintf(format, v...)))
 	}
 }
 
@@ -108,6 +129,14 @@ func Debug(format string, v ...interface{}) {
 
 func Info(format string, v ...interface{}) {
 	defaultLogger.Info(format, v...)
+}
+
+func Success(format string, v ...interface{}) {
+	defaultLogger.Success(format, v...)
+}
+
+func Completed(format string, v ...interface{}) {
+	defaultLogger.Completed(format, v...)
 }
 
 func Warn(format string, v ...interface{}) {
