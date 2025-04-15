@@ -100,8 +100,8 @@ var initCmd = &cobra.Command{
 			bridgeConfig.NAT64IP = ""
 		}
 
-		bridgeConfig.DestIPpath = "dest_ip.txt"
-		bridgeConfig.DestDomainPath = "dest_domain.txt"
+		bridgeConfig.DestIPpath = "ipv4.txt"
+		bridgeConfig.DestDomainPath = "domains.txt"
 
 		data, err := yaml.Marshal(&bridgeConfig)
 		if err != nil {
