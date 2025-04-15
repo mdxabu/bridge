@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type LogLevel int
@@ -21,23 +23,12 @@ const (
 	FatalLevel
 )
 
-const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[34m"
-	colorPurple = "\033[35m"
-	colorCyan   = "\033[36m"
-	colorGray   = "\033[37m"
-)
-
 type Logger struct {
 	debugLogger     *log.Logger
 	infoLogger      *log.Logger
-	warnLogger      *log.Logger
 	successLogger   *log.Logger
 	completedLogger *log.Logger
+	warnLogger      *log.Logger
 	errorLogger     *log.Logger
 	fatalLogger     *log.Logger
 	level           LogLevel
@@ -48,57 +39,58 @@ func New(level LogLevel) *Logger {
 }
 
 func NewWithWriter(writer io.Writer, level LogLevel) *Logger {
+	flags := 0
 	return &Logger{
-		debugLogger:     log.New(writer, "", 0),
-		infoLogger:      log.New(writer, "", 0),
-		successLogger:   log.New(writer, "", 0),
-		completedLogger: log.New(writer, "", 0),
-		warnLogger:      log.New(writer, "", 0),
-		errorLogger:     log.New(writer, "", 0),
-		fatalLogger:     log.New(writer, "", 0),
+		debugLogger:     log.New(writer, "", flags),
+		infoLogger:      log.New(writer, "", flags),
+		successLogger:   log.New(writer, "", flags),
+		completedLogger: log.New(writer, "", flags),
+		warnLogger:      log.New(writer, "", flags),
+		errorLogger:     log.New(writer, "", flags),
+		fatalLogger:     log.New(writer, "", flags),
 		level:           level,
 	}
 }
 
 func (l *Logger) Debug(format string, v ...interface{}) {
 	if l.level <= DebugLevel {
-		l.debugLogger.Output(2, fmt.Sprintf("%s[DEBUG]%s %s", colorGray, colorReset, fmt.Sprintf(format, v...)))
+		l.debugLogger.Output(2, color.HiBlackString("[DEBUG] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Info(format string, v ...interface{}) {
 	if l.level <= InfoLevel {
-		l.infoLogger.Output(2, fmt.Sprintf("%s[INFO]%s %s", colorBlue, colorReset, fmt.Sprintf(format, v...)))
+		l.infoLogger.Output(2, color.CyanString("[INFO] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Success(format string, v ...interface{}) {
 	if l.level <= InfoLevel {
-		l.successLogger.Output(2, fmt.Sprintf("%s[SUCCESS]%s %s", colorGreen, colorReset, fmt.Sprintf(format, v...)))
+		l.successLogger.Output(2, color.GreenString("[SUCCESS] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Completed(format string, v ...interface{}) {
 	if l.level <= InfoLevel {
-		l.completedLogger.Output(2, fmt.Sprintf("%s[COMPLETED]%s %s", colorGreen, colorReset, fmt.Sprintf(format, v...)))
+		l.completedLogger.Output(2, color.GreenString("[COMPLETED] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Warn(format string, v ...interface{}) {
 	if l.level <= InfoLevel {
-		l.warnLogger.Output(2, fmt.Sprintf("%s[WARN]%s %s", colorYellow, colorReset, fmt.Sprintf(format, v...)))
+		l.warnLogger.Output(2, color.YellowString("[WARN] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Error(format string, v ...interface{}) {
 	if l.level <= ErrorLevel {
-		l.errorLogger.Output(2, fmt.Sprintf("%s[ERROR]%s %s", colorRed, colorReset, fmt.Sprintf(format, v...)))
+		l.errorLogger.Output(2, color.RedString("[ERROR] ")+fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *Logger) Fatal(format string, v ...interface{}) {
 	if l.level <= FatalLevel {
-		l.fatalLogger.Output(2, fmt.Sprintf("%s[FATAL]%s %s", colorPurple, colorReset, fmt.Sprintf(format, v...)))
+		l.fatalLogger.Output(2, color.HiRedString("[FATAL] ")+fmt.Sprintf(format, v...))
 		os.Exit(1)
 	}
 }
@@ -107,7 +99,6 @@ func (l *Logger) SetLevel(level LogLevel) {
 	l.level = level
 }
 
-// Default logger instance
 var defaultLogger = New(InfoLevel)
 
 func SetDefaultLogLevel(level LogLevel) {
@@ -150,8 +141,6 @@ func PrintTableHeader() {
 		fmt.Printf("%-18s %-18s %-12s %-14s %-8s  %-12s %-10s\n",
 			"Source", "Destination", "Sent", "Received", "Loss(%)", "Avg RTT", "Result")
 		fmt.Println(strings.Repeat("─", 100))
-
-
 		tableHeaderPrinted = true
 	}
 }
@@ -166,28 +155,34 @@ func PingTable(source, dest string, sent, recv int, loss float64, avg time.Durat
 
 	PrintTableHeader()
 
-	resultColor := colorGreen
+	var resultStyle, lossStyle, sourceStyle *color.Color
+	sourceStyle = color.New(color.FgCyan)
+	lossStyle = color.New(color.FgGreen)
+	resultStyle = color.New(color.FgGreen)
+
 	if result == "Failed" {
-		resultColor = colorRed
+		resultStyle = color.New(color.FgRed)
 	} else if result == "Partial" {
-		resultColor = colorYellow
+		resultStyle = color.New(color.FgYellow)
 	}
 
-	lossColor := colorGreen
 	if loss == 100.0 {
-		lossColor = colorRed
+		lossStyle = color.New(color.FgRed)
 	} else if loss > 0.0 {
-		lossColor = colorYellow
+		lossStyle = color.New(color.FgYellow)
 	}
 
 	lossStr := fmt.Sprintf("%.1f%%", loss)
 
-	fmt.Printf("%s%-18s%s %-18s %-12d %-14d %s%-8s%s  %-12v %s%-10s%s\n",
-		colorBlue, source, colorReset,
-		dest, sent, recv,
-		lossColor, lossStr, colorReset, 
+	fmt.Printf("%-18s %-18s %-12d %-14d %-8s  %-12v %-10s\n",
+		sourceStyle.Sprintf(source),
+		dest,
+		sent,
+		recv,
+		lossStyle.Sprintf(lossStr),
 		avg,
-		resultColor, result, colorReset)
+		resultStyle.Sprintf(result),
+	)
 
 	pingResults = append(pingResults, PingRow{
 		Source:      source,
@@ -206,31 +201,38 @@ func DisplayPingTable() {
 			defaultLogger.Warn("Ping results table is empty")
 			return
 		}
-
 		PrintTableHeader()
+	}
 
-		for _, row := range pingResults {
-			resultColor := colorGreen
-			if row.Result == "Failed" {
-				resultColor = colorRed
-			} else if row.Result == "Partial" {
-				resultColor = colorYellow
-			}
+	for _, row := range pingResults {
+		var resultStyle, lossStyle, sourceStyle *color.Color
+		sourceStyle = color.New(color.FgCyan)
+		lossStyle = color.New(color.FgGreen)
+		resultStyle = color.New(color.FgGreen)
 
-			lossColor := colorGreen
-			if row.Loss == 100.0 {
-				lossColor = colorRed
-			} else if row.Loss > 0.0 {
-				lossColor = colorYellow
-			}
-
-			fmt.Printf("%s%-18s%s %-18s %-12d %-14d %s%-8.1f%%%s  %-12v %s%-10s%s\n",
-				colorBlue, row.Source, colorReset,
-				row.Destination, row.Sent, row.Received,
-				lossColor, row.Loss, colorReset, 
-				row.AvgRTT,
-				resultColor, row.Result, colorReset)
+		if row.Result == "Failed" {
+			resultStyle = color.New(color.FgRed)
+		} else if row.Result == "Partial" {
+			resultStyle = color.New(color.FgYellow)
 		}
+
+		if row.Loss == 100.0 {
+			lossStyle = color.New(color.FgRed)
+		} else if row.Loss > 0.0 {
+			lossStyle = color.New(color.FgYellow)
+		}
+
+		lossStr := fmt.Sprintf("%.1f%%", row.Loss)
+
+		fmt.Printf("%-18s %-18s %-12d %-14d %-8s  %-12v %-10s\n",
+			sourceStyle.Sprintf(row.Source),
+			row.Destination,
+			row.Sent,
+			row.Received,
+			lossStyle.Sprintf(lossStr),
+			row.AvgRTT,
+			resultStyle.Sprintf(row.Result),
+		)
 	}
 
 	fmt.Println(strings.Repeat("─", 100))
