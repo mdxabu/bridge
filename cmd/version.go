@@ -2,16 +2,31 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/spf13/cobra"
 )
 
 var (
 	version   = "0.1.0"
-	commit    = "unknown"
-	buildDate = "unknown"
+	commit    = getGitCommit()
+	buildDate = getBuildDate()
 )
+
+func getGitCommit() string {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	out, err := cmd.Output()
+	if err != nil {
+		return "unknown"
+	}
+	return string(out[:len(out)-1])
+}
+
+func getBuildDate() string {
+	return time.Now().UTC().Format(time.RFC3339)
+}
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
