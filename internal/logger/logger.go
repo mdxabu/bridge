@@ -138,7 +138,7 @@ func ClearPingResults() {
 func PrintTableHeader() {
 	if !tableHeaderPrinted {
 		fmt.Println(strings.Repeat("─", 100))
-		fmt.Printf("%-18s %-18s %-12s %-14s %-8s  %-12s %-10s\n",
+		fmt.Printf("%-18s %-18s %-12s %-14s %-8s     %-12s %-10s\n",
 			"Source", "Destination", "Sent", "Received", "Loss(%)", "Avg RTT", "Result")
 		fmt.Println(strings.Repeat("─", 100))
 		tableHeaderPrinted = true
@@ -174,13 +174,13 @@ func PingTable(source, dest string, sent, recv int, loss float64, avg time.Durat
 
 	lossStr := fmt.Sprintf("%.1f%%", loss)
 
-	fmt.Printf("%-18s %-18s %-12d %-14d %-8s  %-12v %-10s\n",
+	fmt.Printf("%-18s %-18s %-12d %-14d %-8s     %-12s %-10s\n",
 		sourceStyle.Sprintf(source),
 		dest,
-		sent,
-		recv,
-		lossStyle.Sprintf(lossStr),
-		avg,
+		int(sent),
+		int(recv),
+		lossStyle.Sprintf("%s", lossStr),
+		avg.String(),
 		resultStyle.Sprintf(result),
 	)
 
@@ -224,13 +224,13 @@ func DisplayPingTable() {
 
 		lossStr := fmt.Sprintf("%.1f%%", row.Loss)
 
-		fmt.Printf("%-18s %-18s %-12d %-14d %-8s  %-12v %-10s\n",
+		fmt.Printf("%-18s %-18s %-12d %-14d %-8s     %-12s %-10s\n",
 			sourceStyle.Sprintf(row.Source),
 			row.Destination,
-			row.Sent,
-			row.Received,
-			lossStyle.Sprintf(lossStr),
-			row.AvgRTT,
+			int(row.Sent),
+			int(row.Received),
+			lossStyle.Sprintf("%s", lossStr),
+			row.AvgRTT.String(),
 			resultStyle.Sprintf(row.Result),
 		)
 	}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Bridge Dashboard</h1>
+            <a href="/" id="logout">Logout</a>
+        </header>
+        
+        <div class="panel-container">
+            <div class="panel">
+                <h3>Packets Sent & Received</h3>
+                <div id="sent-vs-received"></div>
+            </div>
+            <div class="panel">
+                <h3>Packet Loss</h3>
+                <div id="packet-loss"></div>
+            </div>
+            <div class="panel">
+                <h3>RTT (Round Trip Time)</h3>
+                <div id="rtt"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

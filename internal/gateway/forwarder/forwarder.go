@@ -9,6 +9,16 @@ import (
 	"github.com/mdxabu/bridge/internal/logger"
 )
 
+type PingData struct {
+	Source      string  `json:"source"`
+	Destination string  `json:"destination"`
+	Sent        int     `json:"sent"`
+	Received    int     `json:"received"`
+	PacketLoss  float64 `json:"packet_loss"`
+	RTT         int64   `json:"rtt_ms"`
+	Timestamp   int64   `json:"timestamp"`
+}
+
 func Start() {
 	nextIP, err := config.GetDestIpAddress()
 	if err != nil {
@@ -17,7 +27,6 @@ func Start() {
 	}
 
 	logger.ClearPingResults()
-
 	logger.PrintTableHeader()
 
 	ipCount := 0
@@ -27,7 +36,7 @@ func Start() {
 		if !ok {
 			break
 		}
-		pingDestination(ip)
+		pingDestination(ip, nil)
 		ipCount++
 	}
 
@@ -40,7 +49,24 @@ func Start() {
 	logger.DisplayPingTable()
 }
 
-func pingDestination(ip string) {
+func StartWithCallback(callback func(PingData)) {
+	nextIP, err := config.GetDestIpAddress()
+	if err != nil {
+		logger.Error("Failed to get destination IP addresses: %v", err)
+		return
+	}
+
+	for {
+		ip, ok := nextIP()
+		if !ok {
+			break
+		}
+		go pingDestination(ip, callback)
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func pingDestination(ip string, callback func(PingData)) {
 	sourceIP := getSourceIP()
 
 	pinger, err := ping.NewPinger(ip)
@@ -51,11 +77,23 @@ func pingDestination(ip string) {
 	}
 
 	pinger.Count = 5
-	pinger.Timeout = time.Second * 5
+	pinger.Timeout = 5 * time.Second
 	pinger.SetPrivileged(true)
 
 	pinger.OnFinish = func(stats *ping.Statistics) {
 		logger.PingTable(sourceIP, ip, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss, stats.AvgRtt)
+
+		if callback != nil {
+			callback(PingData{
+				Source:      sourceIP,
+				Destination: ip,
+				Sent:        stats.PacketsSent,
+				Received:    stats.PacketsRecv,
+				PacketLoss:  stats.PacketLoss,
+				RTT:         stats.AvgRtt.Milliseconds(),
+				Timestamp:   time.Now().Unix(),
+			})
+		}
 	}
 
 	if err := pinger.Run(); err != nil {
@@ -82,12 +120,6 @@ func getSourceIP() string {
 		logger.Error("Invalid NAT64 IP: %s", nat64)
 		return "unknown"
 	}
-
-	// ipv4, err := translator.GetIPV4fromNAT64(ip.String())
-	// if err != nil {
-	// 	logger.Error("NAT64 to IPv4 conversion failed: %v", err)
-	// 	return "unknown"
-	// }
 
 	return nat64
 }
