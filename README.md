@@ -7,7 +7,7 @@ Bridge is a NAT64 gateway implementation that enables communication between IPv6
 To run Bridge, follow these steps:
 
 1. Ensure you have Go installed (version 1.19 or later)
-   The latest version of GoLang can installed from here.
+   The latest version of GoLang can be installed from here.
    ```
    >https://go.dev/doc/install
    ```
