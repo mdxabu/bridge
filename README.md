@@ -40,6 +40,6 @@ The above lines of message will be displayed when ```go build -o bridge``` is ex
    ```
    > bridge dns
    ```
-   By using bridge dns, the DNS64 resoluting starts
+   By using bridge dns, the DNS64 resolving starts
    
 The application requires elevated privileges to access network interfaces for packet capture and transmission.
