@@ -8,38 +8,37 @@ To run Bridge, follow these steps:
 
 1. Ensure you have Go installed (version 1.19 or later)
    The latest version of GoLang can be installed from here.
-   ```
-   >https://go.dev/doc/install
-   ```
+   [https://go.dev/doc/install](https://go.dev/doc/install)
 3. Clone the repository
-   ```
+   ```bash
    git clone https://github.com/mdxabu/bridge.git
    cd bridge
    ```
 4. Build the project
+   ```bash
+   go build -o bridge
+   go install 
    ```
-   > go build -o bridge
-   > go install 
-   ```
-go: downloading github.com/fatih/color v1.18.0
-go: downloading github.com/mattn/go-colorable v0.1.13
-go: downloading github.com/mattn/go-isatty v0.0.20
-The above lines of message will be displayed when ```go build -o bridge``` is executed
+
 
 5. Bridge Initialization
+   ```bash
+   bridge init
    ```
-   > bridge init
-   ```
-   This initializes the Bridge CLI
+   This initializes the `bridgeconfig.yaml` file for Bridge CLI.
 6. Bridge run
+   ```bash
+   bridge run
    ```
-   > bridge run
+   This command runs the bridge CLI. The source IP, the destination IP, RTT, the number of sent and received packets, and results are listed in a tabular column.
+7. Bridge DNS
+   ```bash
+   bridge dns
    ```
-   This command runs the bridge CLI. The source IP, the destination IP, RTT, no. of sent and received packets, and results are listed in a tabular column.
-7. Bridge dns
-   ```
-   > bridge dns
-   ```
-   By using bridge dns, the DNS64 resolving starts
+   By using bridge DNS, the DNS64 resolving starts
    
-The application requires elevated privileges to access network interfaces for packet capture and transmission.
+8. Bridge Metrics
+```bash
+bridge metrics --nat64
+```
+This command will show the live metrics of translation in the web dashboard.
