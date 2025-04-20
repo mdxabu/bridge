@@ -35,7 +35,7 @@ The above lines of message will be displayed when ```go build -o bridge``` is ex
    ```
    > bridge run
    ```
-   This commands runs bridge CLI. The source IP, the destination IP, RTT, no. of sent and received packets, and results are listed in a Tabular coulumn.
+   This command runs the bridge CLI. The source IP, the destination IP, RTT, no. of sent and received packets, and results are listed in a tabular column.
 7. Bridge dns
    ```
    > bridge dns
