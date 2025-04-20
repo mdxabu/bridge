@@ -26,7 +26,7 @@ go: downloading github.com/mattn/go-colorable v0.1.13
 go: downloading github.com/mattn/go-isatty v0.0.20
 The above lines of message will be displayed when ```go build -o bridge``` is executed
 
-5. Bride Initialization
+5. Bridge Initialization
    ```
    > bridge init
    ```
