@@ -2,15 +2,14 @@ package cmd
 
 import (
 	"net"
-
 	"github.com/mdxabu/bridge/internal/config"
 	"github.com/mdxabu/bridge/internal/gateway"
 	"github.com/mdxabu/bridge/internal/logger"
 	"github.com/spf13/cobra"
 )
 
-var runCmd = &cobra.Command{
-	Use:   "run",
+var nat64Cmd = &cobra.Command{
+	Use:   "nat64",
 	Short: "Run the translation process",
 	Long:  `Run the translation process to convert IPv6 to IPv4 and forward to the IPv4 container.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -35,12 +34,10 @@ var runCmd = &cobra.Command{
 		logger.Info("Starting the translation process...")
 
 		gateway.Start(ipv6Addr.String())
-		
-		
-	
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(nat64Cmd)
+
 }
