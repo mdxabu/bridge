@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  bridge:
+    build: .
+    container_name: bridge-nat64
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      - bridge-ipv6
+      - bridge-ipv4
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./bridgeconfig.yaml:/app/bridgeconfig.yaml:ro
+    restart: unless-stopped
+    command: start
+
+  # Example IPv6-only client
+  ipv6-client:
+    image: alpine:latest
+    container_name: test-ipv6-client
+    networks:
+      - bridge-ipv6
+    command: sleep infinity
+    depends_on:
+      - bridge
+
+  # Example IPv4-only server
+  ipv4-server:
+    image: nginx:alpine
+    container_name: test-ipv4-server
+    networks:
+      - bridge-ipv4
+    depends_on:
+      - bridge
+
+networks:
+  bridge-ipv6:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd00:64::/64
+
+  bridge-ipv4:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.64.0.0/16

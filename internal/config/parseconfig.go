@@ -1,23 +1,18 @@
 package config
 
 import (
-	"bufio"
-	"errors"
 	"os"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 const DefaultConfigPath = "bridgeconfig.yaml"
 
-var Default_NAT64_prefix = "64:ff9b::"
-
 type BridgeConfig struct {
-	Interface      string `yaml:"interface"`
-	NAT64IP        string `yaml:"nat64_ip"`
-	DestIPpath     string `yaml:"dest_ip_path"`
-	DestDomainPath string `yaml:"dest_domain_path"`
+	Interface    string `yaml:"interface"`
+	NAT64Prefix  string `yaml:"nat64_prefix"`
+	NAT64Gateway string `yaml:"nat64_gateway"`
+	APIPort      int    `yaml:"api_port"`
 }
 
 func ParseConfig() (*BridgeConfig, error) {
@@ -32,137 +27,48 @@ func ParseConfig() (*BridgeConfig, error) {
 		return nil, err
 	}
 
-	if err := validate(&config); err != nil {
-		return nil, err
+	// Set defaults if not specified
+	if config.NAT64Prefix == "" {
+		config.NAT64Prefix = "64:ff9b::/96"
+	}
+	if config.NAT64Gateway == "" {
+		config.NAT64Gateway = "64:ff9b::1"
+	}
+	if config.APIPort == 0 {
+		config.APIPort = 8080
 	}
 
 	return &config, nil
-}
-
-func validate(c *BridgeConfig) error {
-	if c.Interface == "" {
-		return errors.New("missing interface in configuration")
-	}
-	if c.NAT64IP == "" {
-		return errors.New("missing NAT64 IP in configuration")
-	}
-	return nil
 }
 
 func (c *BridgeConfig) GetInterface() string {
 	return c.Interface
 }
 
-func (c *BridgeConfig) GetNAT64IP() (string, error) {
-	if c.NAT64IP == "" {
-		return "", errors.New("NAT64 IP is not set")
-	}
-
-	return c.NAT64IP, nil
+func (c *BridgeConfig) GetNAT64Prefix() string {
+	return c.NAT64Prefix
 }
 
-func (c *BridgeConfig) GetNAT64Prefix() (string, error) {
-	if c.NAT64IP == "" {
-		return "", errors.New("NAT64 IP is not set")
-	}
-	return Default_NAT64_prefix, nil
+func (c *BridgeConfig) GetNAT64Gateway() string {
+	return c.NAT64Gateway
 }
 
-func (c *BridgeConfig) GetDestIPPath() (string, error) {
-	if c.DestIPpath == "" {
-		return "", errors.New("destination IP path is not set")
-	}
-	return c.DestIPpath, nil
+func (c *BridgeConfig) GetAPIPort() int {
+	return c.APIPort
 }
 
-func (c *BridgeConfig) GetDestDomainPath() (string, error) {
-	if c.DestDomainPath == "" {
-		return "", errors.New("destination domain path is not set")
+func CreateDefaultConfig() error {
+	config := BridgeConfig{
+		Interface:    "",
+		NAT64Prefix:  "64:ff9b::/96",
+		NAT64Gateway: "64:ff9b::1",
+		APIPort:      8080,
 	}
-	return c.DestDomainPath, nil
-}
 
-func GetDestIpAddress() (func() (string, bool), error) {
-	config, err := ParseConfig()
+	data, err := yaml.Marshal(&config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	filepath, err := config.GetDestIPPath()
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(file)
-	var ips []string
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line != "" {
-			ips = append(ips, line)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	index := 0
-	return func() (string, bool) {
-		if index >= len(ips) {
-			return "", false
-		}
-		ip := ips[index]
-		index++
-		return ip, true
-	}, nil
-}
-
-func GetDestDomain() (func() (string, bool), error) {
-	config, err := ParseConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	filepath, err := config.GetDestDomainPath()
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(file)
-	var domains []string
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line != "" {
-			domains = append(domains, line)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		file.Close()
-		return nil, err
-	}
-
-	index := 0
-	return func() (string, bool) {
-		if index >= len(domains) {
-			file.Close()
-			return "", false
-		}
-
-		domain := domains[index]
-		index++
-		return domain, true
-	}, nil
+	return os.WriteFile(DefaultConfigPath, data, 0644)
 }

@@ -7,6 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/fatih/color v1.18.0
 	github.com/go-ping/ping v1.2.0
+	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v3 v3.0.1
 )
