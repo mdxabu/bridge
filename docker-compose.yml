@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   bridge:
@@ -39,14 +39,7 @@ services:
 
 networks:
   bridge-ipv6:
-    driver: bridge
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: fd00:64::/64
+    external: true
 
   bridge-ipv4:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.64.0.0/16
+    external: true
